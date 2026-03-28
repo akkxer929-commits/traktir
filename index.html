@@ -14,74 +14,57 @@
             margin: 0; padding: 0;
             background-color: #000;
             overflow: hidden;
-            height: 100vh;
+            width: 100%; height: 100vh;
             -webkit-tap-highlight-color: transparent;
-            /* Обеспечивает центрирование на любом экране */
             display: flex; align-items: center; justify-content: center;
         }
 
+        /* ЭКРАН ЗАГРУЗКИ */
         #splash-screen {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 100;
             background: #000;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.8s ease-in-out;
             will-change: opacity;
-            display: flex; align-items: center; justify-content: center;
         }
 
-        /* --- МАГИЯ БЛИЗОСТИ И ЕДИНОГО ЭКРАНА --- */
-        video {
+        /* ГИФКА: Растягиваем на весь экран (эффект "близко") */
+        #gif-loader {
             width: 100%;
             height: 100%;
-            /* object-fit: cover РАСТЯГИВАЕТ ИЗОБРАЖЕНИЕ НА ВЕСЬ ЭКРАН */
-            /* Это убирает черные поля и делает щит максимально "близким" */
-            object-fit: cover; 
+            object-fit: cover; /* Заполняет всё пространство без полей */
             object-position: center;
-            transform: translateZ(0); /* Ускорение видеокарты */
-            backface-visibility: hidden;
+            display: block;
         }
 
-        /* --- ЧИСТЫЙ НЕВИДИМЫЙ ТРИГГЕР НА ВЕСЬ ЭКРАН --- */
-        #splash-overlay {
+        /* НЕВИДИМЫЙ ТРИГГЕР НА ВЕСЬ ЭКРАН */
+        #tap-zone {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 101;
             cursor: pointer;
-            background: transparent; /* Полностью невидимый блок */
         }
 
-        /* Блок, который ловит клик именно по щиту (приблизительно) */
-        #invisible-trigger {
-            width: 80%; /* Площадь триггера */
-            height: 60vh; /* Высота триггера */
-            background: transparent; /* Невидимый */
-            cursor: pointer;
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%); /* Идеальное центрирование */
-            user-select: none;
-        }
-
-        /* --- ЭКРАН РЕГИСТРАЦИИ (БЕЗ ИЗМЕНЕНИЙ) --- */
-        #reg-screen { 
-            display: none; 
-            padding: 50px 25px; 
+        /* ЭКРАН РЕГИСТРАЦИИ */
+        #reg-screen {
+            display: none;
+            padding: 50px 25px;
             background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
-            height: 100vh; 
+            height: 100vh;
             width: 100%;
             box-sizing: border-box;
             text-align: center;
-            z-index: 50;
             position: fixed;
             top: 0; left: 0;
             color: #fff;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            z-index: 50;
         }
 
-        h2 { color: var(--gold); letter-spacing: 4px; margin-bottom: 40px; text-transform: uppercase; }
+        h2 { color: var(--gold); letter-spacing: 4px; margin-bottom: 40px; text-transform: uppercase; font-size: 24px; }
 
         input {
             width: 100%; padding: 18px; margin: 15px 0;
@@ -98,26 +81,23 @@
             font-weight: bold; text-transform: uppercase;
             margin-top: 30px; box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
             cursor: pointer;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
-        <video id="vid" playsinline webkit-playsinline muted poster="Poster1.png">
-            <source src="Poster3.mp4" type="video/mp4">
-        </video>
+        <img id="gif-loader" src="Poster2.gif" alt="Traktir Loading...">
         
-        <div id="splash-overlay">
-            <div id="invisible-trigger" onclick="runApp()"></div>
-        </div>
+        <div id="tap-zone" onclick="launchApp()"></div>
     </div>
 
     <div id="reg-screen">
-        <h2>Регистрация</h2>
+        <h2>Вход в Трактир</h2>
         <input type="text" id="nick" placeholder="Игровой Никнейм в Warspear">
-        <input type="tel" id="phone" placeholder="Ваш телефон">
-        <button class="btn-entry" onclick="save()">Войти в Трактир</button>
+        <input type="tel" id="phone" placeholder="Ваш телефон (опционально)">
+        <button class="btn-entry" onclick="sendReg()">Начать Торговлю</button>
     </div>
 
     <script>
@@ -126,43 +106,30 @@
         tg.headerColor = "#000000";
 
         let active = false;
-        function runApp() {
+        function launchApp() {
             if (active) return;
-            const v = document.getElementById('vid');
-            
-            // Включаем звук монет при нажатии
-            v.muted = false; 
-            v.play().then(() => {
-                active = true;
-                // Не показываем никаких надписей "ЗАГРУЗКА..."
+            active = true;
 
-                // Таймер на 7 секунд (длина твоего видео Poster3.mp4)
+            // С гифкой нам не нужно ждать play(), просто запускаем таймер
+            // Ровно через 7 секунд (длина анимации с монетами) переходим дальше
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                
                 setTimeout(() => {
-                    const splash = document.getElementById('splash-screen');
-                    splash.style.opacity = '0'; // Плавное затухание
+                    splash.style.display = 'none';
+                    document.getElementById('reg-screen').style.display = 'block';
                     
-                    setTimeout(() => {
-                        // Очистка ресурсов
-                        v.pause(); v.src = ""; v.load();
-                        splash.style.display = 'none';
-                        document.getElementById('reg-screen').style.display = 'block';
-                        // Виброотклик при входе
-                        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                    }, 800); // Время на анимацию исчезновения
-                }, 7000); 
-
-            }).catch(err => {
-                // Если звук заблокирован, запускаем без него
-                v.muted = true;
-                v.play();
-                active = true;
-            });
+                    // Виброотклик для ощущения "входа"
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                }, 800);
+            }, 7000); 
         }
 
-        function save() {
+        function sendReg() {
             let n = document.getElementById('nick').value;
-            if(!n) return tg.showAlert("Странник, назови свое имя!");
-            // Отправляем данные боту
+            if(!n) return tg.showAlert("Назови свое имя, Странник!");
+            
             tg.sendData(JSON.stringify({
                 type: "registration", 
                 nick: n, 
