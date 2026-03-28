@@ -8,81 +8,75 @@
     <style>
         :root {
             --gold: #d4af37;
-            --text-glow: rgba(212, 175, 55, 0.8);
         }
 
         body, html {
             margin: 0; padding: 0;
-            background-color: #000;
+            background-color: #000; /* Только черный фон */
             color: #fff;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
             -webkit-tap-highlight-color: transparent;
+            /* Центрирование контента на экране */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
+        /* --- ПОЛНОЭКРАННЫЙ SPLASH --- */
         #splash-screen {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 100;
-            transition: opacity 0.8s ease-in-out;
+            background: #000;
+            transition: opacity 0.7s ease-in-out;
             will-change: opacity;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* Полноэкранный режим: растягиваем без полей */
+        /* МАГИЯ ПРОПОРЦИЙ: Видео идеально по центру */
         #logo-video {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            object-fit: fill; 
+            /* ИСПОЛЬЗУЕМ contain ДЛЯ ПРОПОРЦИЙ БЕЗ РАСТЯЖКИ */
+            object-fit: contain; 
             object-position: center;
             transform: translateZ(0);
         }
 
+        /* --- НЕВИДИМЫЙ "ТРИГГЕР" --- */
         #splash-overlay {
-            position: relative;
-            z-index: 101;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-bottom: 15vh; /* Отступ текста от низа */
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
-        }
-
-        /* Пульсирующая надпись-триггер */
-        .interactive-text {
-            color: var(--gold);
-            font-size: 26px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 6px;
-            text-shadow: 0 0 15px var(--text-glow);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 102; /* Поверх всего */
             cursor: pointer;
-            animation: glowPulse 2s infinite ease-in-out;
+            background: transparent; /* Полностью прозрачный */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Блок, который ловит клик именно по щиту/надписи (приблизительно) */
+        #invisible-trigger {
+            width: 80%; /* Площадь триггера */
+            height: 60vh; /* Высота триггера */
+            background: transparent; /* Невидимый */
+            cursor: pointer;
             user-select: none;
-            transition: transform 0.2s, opacity 0.4s;
         }
 
-        @keyframes glowPulse {
-            0% { opacity: 0.6; text-shadow: 0 0 10px var(--text-glow); }
-            50% { opacity: 1; text-shadow: 0 0 30px #ffd700, 0 0 10px #fff; }
-            100% { opacity: 0.6; text-shadow: 0 0 10px var(--text-glow); }
-        }
-
-        /* Экран регистрации */
+        /* --- ЭКРАН РЕГИСТРАЦИИ (БЕЗ ИЗМЕНЕНИЙ) --- */
         #reg-screen { 
             display: none; 
             padding: 50px 25px; 
             background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
             height: 100vh; 
+            width: 100%;
             text-align: center;
             box-sizing: border-box;
+            z-index: 50;
         }
 
         h2 { color: var(--gold); letter-spacing: 4px; margin-bottom: 40px; text-transform: uppercase; }
@@ -113,48 +107,52 @@
         </video>
         
         <div id="splash-overlay">
-            <div class="interactive-text" id="trigger" onclick="launchApp()">WARSPEAR ONLINE</div>
+            <div id="invisible-trigger" onclick="launchApp()"></div>
         </div>
     </div>
 
     <div id="reg-screen">
         <h2>Вход в Трактир</h2>
-        <input type="text" id="nick" placeholder="Игровой Никнейм">
-        <input type="tel" id="phone" placeholder="Номер телефона">
+        <input type="text" id="nick" placeholder="Игровой Никнейм в Warspear">
+        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
         <button class="btn-entry" onclick="sendReg()">Начать Торговлю</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        // Пытаемся развернуть Mini App на весь экран телефона
+        if (tg.requestFullscreen) tg.requestFullscreen();
         tg.headerColor = "#000000";
 
         let active = false;
         function launchApp() {
             if (active) return;
             const v = document.getElementById('vid');
-            const txt = document.getElementById('trigger');
             
-            v.muted = false; // Включаем звук монет
+            // Включаем звук монет при нажатии
+            v.muted = false; 
             v.play().then(() => {
                 active = true;
-                txt.style.opacity = '0';
-                txt.style.transform = 'scale(0.8)';
+                // Не показываем никаких "ЗАГРУЗОК...", просто видео играет 7 сек
 
-                // Таймер на 7 секунд (длина твоего видео)
+                // Таймер на 7 секунд (длина твоего видео Poster3.mp4)
                 setTimeout(() => {
                     const splash = document.getElementById('splash-screen');
-                    splash.style.opacity = '0';
+                    splash.style.opacity = '0'; // Плавное затухание
                     
                     setTimeout(() => {
-                        // Чистим память
+                        // Очистка ресурсов
                         v.pause(); v.src = ""; v.load();
                         splash.style.display = 'none';
                         document.getElementById('reg-screen').style.display = 'block';
+                        // Приятный виброотклик
                         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                    }, 800);
+                    }, 700); // Время на анимацию исчезновения
                 }, 7000); 
+
             }).catch(err => {
+                // Если звук заблокирован, запускаем без него
                 v.muted = true;
                 v.play();
                 active = true;
@@ -164,6 +162,7 @@
         function sendReg() {
             let n = document.getElementById('nick').value;
             if(!n) return tg.showAlert("Назови свое имя, Странник!");
+            // Отправляем данные боту
             tg.sendData(JSON.stringify({
                 type: "registration", 
                 nick: n, 
