@@ -2,71 +2,75 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TRAKTIR - Era of Gold</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --gold: #d4af37;
-            --gold-glow: rgba(212, 175, 55, 0.4);
-            --bg: #050505;
-            --card-bg: #121212;
+            --bg: #000;
         }
 
         body, html {
             margin: 0; padding: 0;
-            background-color: var(--bg);
+            background-color: #000;
             color: #fff;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
             height: 100vh;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- ЭКРАН ЗАГРУЗКИ (SPLASH) --- */
+        /* --- ПОЛНОЭКРАННЫЙ SPLASH --- */
         #splash-screen {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
             z-index: 100;
-            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
-            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.5s;
-        }
-
-        #video-container {
-            position: relative;
-            width: 85%;
-            max-width: 350px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 0 50px var(--gold-glow);
-            border: 1px solid var(--gold);
             cursor: pointer;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            background: #000;
         }
 
-        video { width: 100%; display: block; pointer-events: none; }
+        /* Видео на весь экран */
+        #logo-video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; /* Растягивает видео без рамок */
+            object-position: center;
+        }
+
+        /* Оверлей для текста и полоски */
+        #splash-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.9) 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-end;
+            padding-bottom: 60px;
+            box-sizing: border-box;
+        }
 
         .tap-hint {
-            margin-top: 25px;
             color: var(--gold);
             font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--gold);
-            animation: pulse 1.5s infinite;
+            letter-spacing: 4px;
+            text-shadow: 0 0 15px var(--gold);
+            animation: pulse 2s infinite;
+            margin-bottom: 25px;
         }
 
         #loading-bar-container {
-            width: 60%;
+            width: 70%;
             height: 4px;
-            background: #1a1a1a;
-            margin-top: 30px;
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
             display: none;
             overflow: hidden;
-            border: 1px solid #333;
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
         #loading-bar {
@@ -79,155 +83,137 @@
         /* --- ЭКРАН РЕГИСТРАЦИИ --- */
         #reg-screen {
             display: none;
-            padding: 25px;
+            padding: 40px 25px;
             height: 100vh;
+            background: linear-gradient(180deg, #121212 0%, #000 100%);
             box-sizing: border-box;
-            background: linear-gradient(180deg, #121212 0%, #050505 100%);
-            overflow-y: auto;
+            text-align: center;
         }
 
-        .header { text-align: center; margin-bottom: 35px; }
-        .header h1 { 
-            color: var(--gold); 
-            font-size: 28px; 
-            margin: 0; 
-            text-transform: uppercase; 
-            letter-spacing: 3px;
-        }
+        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
 
-        .form-group { margin-bottom: 25px; }
-        label { 
-            display: block; 
-            color: var(--gold); 
-            font-size: 11px; 
-            font-weight: bold;
-            margin-bottom: 10px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-        }
-        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; color: var(--gold); font-size: 10px; margin-bottom: 8px; letter-spacing: 1px; }
+
         input {
             width: 100%;
             background: #1a1a1a;
             border: 1px solid #333;
-            padding: 14px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 12px;
             color: #fff;
             font-size: 16px;
             box-sizing: border-box;
+            outline: none;
         }
+        input:focus { border-color: var(--gold); }
 
         .btn-gold {
             background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
             color: #000;
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             border: none;
             border-radius: 12px;
-            font-weight: 800;
+            font-weight: bold;
             font-size: 16px;
             text-transform: uppercase;
-            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
         }
 
         @keyframes pulse {
-            0% { opacity: 0.3; }
-            50% { opacity: 1; }
-            100% { opacity: 0.3; }
+            0% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.4; transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
     <div id="splash-screen" onclick="startLoading()">
-        <div id="video-container">
-            <video id="logo-video" preload="auto" playsinline muted>
-                <source src="gemini_generated_video_480d5482.mp4" type="video/mp4">
-            </video>
-        </div>
-        <div class="tap-hint" id="hint-text">Тапни по щиту для входа</div>
+        <video id="logo-video" playsinline webkit-playsinline muted poster="Poster1.png">
+            <source src="Poster2.mp4" type="video/mp4">
+        </video>
         
-        <div id="loading-bar-container">
-            <div id="loading-bar"></div>
+        <div id="splash-overlay">
+            <div class="tap-hint" id="hint-text">Тапни для входа</div>
+            <div id="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
         </div>
     </div>
 
     <div id="reg-screen">
-        <div class="header">
-            <h1>Трактир</h1>
-            <div style="font-size: 12px; color: var(--gold); margin-top: 10px;">РЕГИСТРАЦИЯ АККАУНТА</div>
+        <h2>Регистрация</h2>
+        
+        <div class="form-group">
+            <label>НИКНЕЙМ В WARSPEAR</label>
+            <input type="text" id="game-nick" placeholder="Напр: ShamanKhabar">
         </div>
 
         <div class="form-group">
-            <label>Твой Ник в Warspear Online *</label>
-            <input type="text" id="game-nick" placeholder="Напр: CyberMighty">
-        </div>
-
-        <div class="form-group">
-            <label>Имя из Telegram</label>
-            <input type="text" id="tg-name" readonly>
-        </div>
-
-        <div class="form-group">
-            <label>Контактный телефон</label>
+            <label>ТЕЛЕФОН ДЛЯ СВЯЗИ</label>
             <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
         </div>
 
-        <button class="btn-gold" onclick="finishReg()">Зарегистрироваться</button>
+        <button class="btn-gold" onclick="finishReg()">Войти в Трактир</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.headerColor = "#050505";
-
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('tg-name').value = tg.initDataUnsafe.user.first_name;
-        }
+        tg.headerColor = "#000000";
 
         let isStarted = false;
         function startLoading() {
             if (isStarted) return;
             const video = document.getElementById('logo-video');
             
-            // Включаем звук и запускаем
+            // Активируем звук и полноэкранное видео
             video.muted = false;
             video.play().then(() => {
                 isStarted = true;
-                document.getElementById('hint-text').innerText = "Загрузка ресурсов...";
+                document.getElementById('hint-text').innerText = "Загрузка...";
                 document.getElementById('loading-bar-container').style.display = 'block';
                 
                 let width = 0;
                 let interval = setInterval(() => {
-                    width += 1.5;
+                    width += 1.43; // Расчет на ~7 секунд видео
                     if (width >= 100) {
+                        width = 100;
                         clearInterval(interval);
-                        showMainApp();
+                        showApp();
                     }
                     document.getElementById('loading-bar').style.width = width + '%';
                 }, 100);
-            }).catch(e => {
-                // Если звук заблокирован, запускаем без него
+            }).catch(err => {
+                // Если звук блокирован, запускаем без него
                 video.muted = true;
                 video.play();
                 isStarted = true;
             });
         }
 
-        function showMainApp() {
+        function showApp() {
             const splash = document.getElementById('splash-screen');
             splash.style.opacity = '0';
+            splash.style.transform = 'scale(1.1)';
             setTimeout(() => {
                 splash.style.display = 'none';
                 document.getElementById('reg-screen').style.display = 'block';
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             }, 800);
         }
 
         function finishReg() {
             let nick = document.getElementById('game-nick').value;
-            if (!nick) { tg.showAlert("Странник, назови свой ник!"); return; }
+            if (!nick) {
+                tg.showAlert("Странник, назови свой ник!");
+                return;
+            }
             tg.sendData(JSON.stringify({
-                type: "registration",
+                type: "reg",
                 nickname: nick,
                 phone: document.getElementById('phone').value
             }));
