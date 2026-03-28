@@ -95,14 +95,6 @@
             letter-spacing: 3px;
         }
 
-        .progress-container {
-            background: rgba(212, 175, 55, 0.1);
-            padding: 10px;
-            border-radius: 12px;
-            margin-top: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
         .form-group { margin-bottom: 25px; }
         label { 
             display: block; 
@@ -123,12 +115,6 @@
             color: #fff;
             font-size: 16px;
             box-sizing: border-box;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        input:focus { 
-            border-color: var(--gold); 
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
-            outline: none;
         }
 
         .btn-gold {
@@ -141,17 +127,12 @@
             font-weight: 800;
             font-size: 16px;
             text-transform: uppercase;
-            letter-spacing: 1px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            margin-top: 10px;
         }
-
-        .btn-gold:active { transform: scale(0.98); opacity: 0.9; }
 
         @keyframes pulse {
             0% { opacity: 0.3; }
-            50% { opacity: 1; text-shadow: 0 0 15px var(--gold); }
+            50% { opacity: 1; }
             100% { opacity: 0.3; }
         }
     </style>
@@ -160,8 +141,8 @@
 
     <div id="splash-screen" onclick="startLoading()">
         <div id="video-container">
-            <video id="logo-video" preload="auto" playsinline>
-                <source src="1000070253.mp4" type="video/mp4">
+            <video id="logo-video" preload="auto" playsinline muted>
+                <source src="gemini_generated_video_480d5482.mp4" type="video/mp4">
             </video>
         </div>
         <div class="tap-hint" id="hint-text">Тапни по щиту для входа</div>
@@ -174,9 +155,7 @@
     <div id="reg-screen">
         <div class="header">
             <h1>Трактир</h1>
-            <div class="progress-container">
-                <div style="font-size: 12px; color: var(--gold);">РЕГИСТРАЦИЯ АККАУНТА</div>
-            </div>
+            <div style="font-size: 12px; color: var(--gold); margin-top: 10px;">РЕГИСТРАЦИЯ АККАУНТА</div>
         </div>
 
         <div class="form-group">
@@ -195,19 +174,13 @@
         </div>
 
         <button class="btn-gold" onclick="finishReg()">Зарегистрироваться</button>
-        
-        <p style="text-align: center; color: #555; font-size: 10px; margin-top: 20px;">
-            Нажимая кнопку, вы принимаете устав Трактира
-        </p>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.enableClosingConfirmation();
         tg.headerColor = "#050505";
 
-        // Подтягиваем имя из Телеграм
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             document.getElementById('tg-name').value = tg.initDataUnsafe.user.first_name;
         }
@@ -215,64 +188,49 @@
         let isStarted = false;
         function startLoading() {
             if (isStarted) return;
-            isStarted = true;
-
             const video = document.getElementById('logo-video');
-            const bar = document.getElementById('loading-bar');
-            const container = document.getElementById('loading-bar-container');
-            const hint = document.getElementById('hint-text');
-
-            // Запуск видео и звука по клику
-            video.play().catch(e => console.log("Audio play blocked"));
-            hint.innerText = "Загрузка ресурсов...";
-            container.style.display = 'block';
-
-            let width = 0;
-            let duration = 7000; // 7 секунд под видео
-            let step = 100;
             
-            let interval = setInterval(() => {
-                width += (100 / (duration / step));
-                if (width >= 100) {
-                    width = 100;
-                    clearInterval(interval);
-                    showMainApp();
-                }
-                bar.style.width = width + '%';
-            }, step);
+            // Включаем звук и запускаем
+            video.muted = false;
+            video.play().then(() => {
+                isStarted = true;
+                document.getElementById('hint-text').innerText = "Загрузка ресурсов...";
+                document.getElementById('loading-bar-container').style.display = 'block';
+                
+                let width = 0;
+                let interval = setInterval(() => {
+                    width += 1.5;
+                    if (width >= 100) {
+                        clearInterval(interval);
+                        showMainApp();
+                    }
+                    document.getElementById('loading-bar').style.width = width + '%';
+                }, 100);
+            }).catch(e => {
+                // Если звук заблокирован, запускаем без него
+                video.muted = true;
+                video.play();
+                isStarted = true;
+            });
         }
 
         function showMainApp() {
             const splash = document.getElementById('splash-screen');
-            const reg = document.getElementById('reg-screen');
-            
             splash.style.opacity = '0';
-            splash.style.transform = 'scale(1.2)';
-            
             setTimeout(() => {
                 splash.style.display = 'none';
-                reg.style.display = 'block';
-                // Виброотклик при входе
-                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                document.getElementById('reg-screen').style.display = 'block';
             }, 800);
         }
 
         function finishReg() {
             let nick = document.getElementById('game-nick').value;
-            if (!nick || nick.length < 2) {
-                tg.showAlert("Странник, назови свой игровой ник!");
-                return;
-            }
-            
-            let data = {
+            if (!nick) { tg.showAlert("Странник, назови свой ник!"); return; }
+            tg.sendData(JSON.stringify({
                 type: "registration",
                 nickname: nick,
-                phone: document.getElementById('phone').value,
-                user: tg.initDataUnsafe.user?.username || "unknown"
-            };
-            
-            // Отправляем данные боту и закрываем приложение
-            tg.sendData(JSON.stringify(data));
+                phone: document.getElementById('phone').value
+            }));
         }
     </script>
 </body>
