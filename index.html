@@ -24,12 +24,24 @@
         <button class="btn" onclick="buy()">Купить (через Гаранта)</button>
     </div>
 
-    <script>
+        <script>
         let tg = window.Telegram.WebApp;
-        tg.expand();
+        tg.expand(); // Разворачивает окно на весь экран
         
+        // Подставляем имя пользователя из Телеграма
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
         }
 
-        index.html
+        // Самая важная функция — отправка данных боту
+        function buy() {
+            let orderData = {
+                item: "100 000 Голд",
+                price: "500 ₽",
+                game: "Warspear Online"
+            };
+            
+            // Отправляем данные и ЗАКРЫВАЕМ мини-приложение
+            tg.sendData(JSON.stringify(orderData));
+        }
+    </script>
