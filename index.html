@@ -6,96 +6,67 @@
     <title>TRAKTIR</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --gold: #d4af37;
-        }
-
         body, html {
             margin: 0; padding: 0;
-            background-color: #000; /* Только черный фон */
-            color: #fff;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000;
             overflow: hidden;
             height: 100vh;
+            display: flex; align-items: center; justify-content: center;
             -webkit-tap-highlight-color: transparent;
-            /* Центрирование контента на экране */
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* --- ПОЛНОЭКРАННЫЙ SPLASH --- */
         #splash-screen {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 100;
             background: #000;
-            transition: opacity 0.7s ease-in-out;
-            will-change: opacity;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        /* МАГИЯ ПРОПОРЦИЙ: Видео идеально по центру */
-        #logo-video {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            /* ИСПОЛЬЗУЕМ contain ДЛЯ ПРОПОРЦИЙ БЕЗ РАСТЯЖКИ */
-            object-fit: contain; 
-            object-position: center;
+        /* ЦЕНТРИРОВАНИЕ БЕЗ ИСКАЖЕНИЙ */
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Показывает картинку целиком, без зума */
             transform: translateZ(0);
         }
 
-        /* --- НЕВИДИМЫЙ "ТРИГГЕР" --- */
-        #splash-overlay {
+        /* НЕВИДИМАЯ КНОПКА НА ВЕСЬ ЭКРАН */
+        #tap-zone {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            z-index: 102; /* Поверх всего */
+            z-index: 101;
             cursor: pointer;
-            background: transparent; /* Полностью прозрачный */
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: transparent;
         }
 
-        /* Блок, который ловит клик именно по щиту/надписи (приблизительно) */
-        #invisible-trigger {
-            width: 80%; /* Площадь триггера */
-            height: 60vh; /* Высота триггера */
-            background: transparent; /* Невидимый */
-            cursor: pointer;
-            user-select: none;
-        }
-
-        /* --- ЭКРАН РЕГИСТРАЦИИ (БЕЗ ИЗМЕНЕНИЙ) --- */
-        #reg-screen { 
-            display: none; 
-            padding: 50px 25px; 
-            background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
-            height: 100vh; 
+        /* ЭКРАН РЕГИСТРАЦИИ */
+        #reg-screen {
+            display: none;
+            padding: 40px 25px;
+            background: #0a0a0a;
+            height: 100vh;
             width: 100%;
-            text-align: center;
             box-sizing: border-box;
-            z-index: 50;
+            text-align: center;
+            color: #fff;
+            font-family: sans-serif;
         }
 
-        h2 { color: var(--gold); letter-spacing: 4px; margin-bottom: 40px; text-transform: uppercase; }
-
+        h2 { color: #d4af37; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; }
         input {
-            width: 100%; padding: 18px; margin: 15px 0;
-            background: #111; border: 1px solid #333;
-            color: #fff; border-radius: 12px; box-sizing: border-box;
-            font-size: 16px; outline: none;
+            width: 100%; padding: 18px; margin: 12px 0;
+            background: #151515; border: 1px solid #333;
+            color: #fff; border-radius: 12px; box-sizing: border-box; font-size: 16px;
         }
-        input:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-
-        .btn-entry {
-            width: 100%; padding: 20px;
+        .btn {
+            width: 100%; padding: 18px;
             background: linear-gradient(180deg, #ffd700, #b8860b);
             color: #000; border: none; border-radius: 12px;
-            font-weight: bold; text-transform: uppercase;
-            margin-top: 30px; box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-            cursor: pointer;
+            font-weight: bold; text-transform: uppercase; margin-top: 20px;
         }
     </style>
 </head>
@@ -105,69 +76,53 @@
         <video id="vid" playsinline webkit-playsinline muted poster="Poster1.png">
             <source src="Poster3.mp4" type="video/mp4">
         </video>
-        
-        <div id="splash-overlay">
-            <div id="invisible-trigger" onclick="launchApp()"></div>
-        </div>
+        <div id="tap-zone" onclick="runApp()"></div>
     </div>
 
     <div id="reg-screen">
-        <h2>Вход в Трактир</h2>
-        <input type="text" id="nick" placeholder="Игровой Никнейм в Warspear">
-        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
-        <button class="btn-entry" onclick="sendReg()">Начать Торговлю</button>
+        <h2>Регистрация</h2>
+        <input type="text" id="nick" placeholder="Ник в Warspear">
+        <input type="tel" id="phone" placeholder="Ваш телефон">
+        <button class="btn" onclick="save()">Войти</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        // Пытаемся развернуть Mini App на весь экран телефона
-        if (tg.requestFullscreen) tg.requestFullscreen();
         tg.headerColor = "#000000";
 
-        let active = false;
-        function launchApp() {
-            if (active) return;
+        let started = false;
+        function runApp() {
+            if (started) return;
             const v = document.getElementById('vid');
             
-            // Включаем звук монет при нажатии
-            v.muted = false; 
+            v.muted = false; // Включаем звук монет при тапе
             v.play().then(() => {
-                active = true;
-                // Не показываем никаких "ЗАГРУЗОК...", просто видео играет 7 сек
-
-                // Таймер на 7 секунд (длина твоего видео Poster3.mp4)
+                started = true;
+                
+                // Ждем 7 секунд (длина твоего видео)
                 setTimeout(() => {
                     const splash = document.getElementById('splash-screen');
-                    splash.style.opacity = '0'; // Плавное затухание
+                    splash.style.opacity = '0';
                     
                     setTimeout(() => {
-                        // Очистка ресурсов
                         v.pause(); v.src = ""; v.load();
                         splash.style.display = 'none';
                         document.getElementById('reg-screen').style.display = 'block';
-                        // Приятный виброотклик
                         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                    }, 700); // Время на анимацию исчезновения
-                }, 7000); 
-
-            }).catch(err => {
-                // Если звук заблокирован, запускаем без него
+                    }, 800);
+                }, 7000);
+            }).catch(() => {
                 v.muted = true;
                 v.play();
-                active = true;
+                started = true;
             });
         }
 
-        function sendReg() {
+        function save() {
             let n = document.getElementById('nick').value;
-            if(!n) return tg.showAlert("Назови свое имя, Странник!");
-            // Отправляем данные боту
-            tg.sendData(JSON.stringify({
-                type: "registration", 
-                nick: n, 
-                phone: document.getElementById('phone').value
-            }));
+            if(!n) return tg.showAlert("Странник, введи ник!");
+            tg.sendData(JSON.stringify({type: "reg", nick: n, phone: document.getElementById('phone').value}));
         }
     </script>
 </body>
