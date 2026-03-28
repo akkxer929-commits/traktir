@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRAKTIR Market</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background-color: #1e1e24; color: #fff; font-family: sans-serif; padding: 20px; text-align: center; }
+        .card { background: #2b2b36; padding: 20px; border-radius: 10px; margin-top: 20px; border: 1px solid #ffcc00; }
+        .btn { background: #ffcc00; color: #000; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; }
+        h1 { color: #ffcc00; margin-bottom: 5px; }
+        .desc { color: #aaa; font-size: 14px; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>Трактир открыт! 🍻</h1>
+    <p class="desc">Добро пожаловать, <span id="user-name" style="color:#ffcc00;">Путник</span>!</p>
+    
+    <div class="card">
+        <h3>100 000 Голд</h3>
+        <p>Warspear Online (RU-Amber)</p>
+        <p style="color: #4caf50; font-size: 18px; font-weight: bold;">Цена: 500 ₽</p>
+        <button class="btn" onclick="buy()">Купить (через Гаранта)</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+        }
+
+        function buy() {
+            tg.showAlert("Сделка начата! Ваши 500₽ заморожены. Ожидайте передачи голды в игре.");
+        }
+    </script>
+</body>
+</html>
