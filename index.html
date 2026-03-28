@@ -3,161 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TRAKTIR - Era of Gold</title>
+    <title>TRAKTIR</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --gold: #d4af37;
-            --bg: #000;
+            --btn-dark: rgba(26, 26, 26, 0.9);
         }
 
         body, html {
             margin: 0; padding: 0;
-            background-color: #000;
+            background-color: #000; /* Фон всегда черный, чтобы "отдаление" смотрелось круто */
             color: #fff;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             height: 100vh;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- ПОЛНОЭКРАННЫЙ SPLASH --- */
         #splash-screen {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 100;
             cursor: pointer;
-            transition: opacity 0.8s ease, transform 0.8s ease;
-            background: #000;
-        }
-
-        /* Видео на весь экран */
-        #logo-video {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover; /* Растягивает видео без рамок */
-            object-position: center;
-        }
-
-        /* Оверлей для текста и полоски */
-        #splash-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.9) 100%);
+            transition: opacity 0.6s ease-in-out;
+            will-change: opacity;
             display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-end;
-            padding-bottom: 60px;
-            box-sizing: border-box;
+            align-items: center; justify-content: center;
         }
 
-        .tap-hint {
-            color: var(--gold);
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            text-shadow: 0 0 15px var(--gold);
-            animation: pulse 2s infinite;
-            margin-bottom: 25px;
-        }
-
-        #loading-bar-container {
-            width: 70%;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            display: none;
-            overflow: hidden;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-        }
-
-        #loading-bar {
-            width: 0%;
+        video {
+            width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, var(--gold), #fff);
-            box-shadow: 0 0 15px var(--gold);
+            /* МАГИЯ ЗДЕСЬ:contain показывает всё видео целиком, добавляя поля. Это создаёт "дистанцию" */
+            object-fit: contain; 
+            object-position: center;
+            /* Ускорение рендеринга */
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
-        /* --- ЭКРАН РЕГИСТРАЦИИ --- */
-        #reg-screen {
-            display: none;
-            padding: 40px 25px;
-            height: 100vh;
-            background: linear-gradient(180deg, #121212 0%, #000 100%);
-            box-sizing: border-box;
+        #overlay {
+            position: absolute;
+            bottom: 15%; /* Отступ кнопки PLAY от низа */
+            width: 100%;
             text-align: center;
+            z-index: 101;
+            /* затемнение нижнего поля, если contain добавил поля сверху-снизу */
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            padding-top: 50px;
         }
 
-        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; }
-
-        .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; color: var(--gold); font-size: 10px; margin-bottom: 8px; letter-spacing: 1px; }
-
-        input {
-            width: 100%;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            padding: 15px;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 16px;
-            box-sizing: border-box;
-            outline: none;
-        }
-        input:focus { border-color: var(--gold); }
-
-        .btn-gold {
-            background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
-            color: #000;
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 16px;
+        /* --- КНОПКА PLAY В ИГРОВОМ СТИЛЕ --- */
+        .hint {
+            display: inline-block;
+            padding: 15px 40px;
+            background: var(--btn-dark);
+            /* Градиент "Старое золото" */
+            background: linear-gradient(180deg, var(--btn-dark) 0%, rgba(10, 10, 10, 0.95) 100%);
+            border: 2px solid #ffd700;
+            border-radius: 6px;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.4); /* Золотое свечение */
+            
+            color: #ffd700;
+            font-family: serif; /* Игровой шрифт по умолчанию */
+            font-size: 22px;
+            font-weight: 800;
             text-transform: uppercase;
-            margin-top: 30px;
-            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
+            letter-spacing: 5px; /* Сильный разбег букв как в игровых лого */
+            
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.9); /* Свечение текста */
+            
+            cursor: pointer;
+            animation: buttonPulse 2.5s infinite ease-in-out;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
-            100% { opacity: 0.4; transform: scale(1); }
+        @keyframes buttonPulse {
+            0% { transform: scale(1); box-shadow: 0 0 25px rgba(212, 175, 55, 0.4); border-color: #ffd700; }
+            50% { transform: scale(1.03); box-shadow: 0 0 35px rgba(212, 175, 55, 0.7); border-color: #fff; }
+            100% { transform: scale(1); box-shadow: 0 0 25px rgba(212, 175, 55, 0.4); border-color: #ffd700; }
         }
+
+        #bar-box {
+            width: 60%; height: 4px;
+            background: rgba(255,255,255,0.05);
+            margin: 25px auto 0;
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+
+        #bar { 
+            width: 0%; height: 100%; 
+            background: linear-gradient(90deg, #d4af37, #fff);
+            transition: width 0.15s linear;
+            box-shadow: 0 0 10px #d4af37;
+        }
+
+        /* --- ЭКРАН РЕГИСТРАЦИИ (БЕЗ ИЗМЕНЕНИЙ) --- */
+        #reg-screen { 
+            display: none; padding: 40px 20px; 
+            background: linear-gradient(180deg, #121212 0%, #000 100%);
+            height: 100vh; text-align: center;
+        }
+        input { width: 100%; padding: 16px; margin: 12px 0; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 12px; box-sizing: border-box; font-size: 16px; }
+        .btn { width: 100%; padding: 18px; background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; margin-top: 20px; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
     </style>
 </head>
 <body>
 
-    <div id="splash-screen" onclick="startLoading()">
-        <video id="logo-video" playsinline webkit-playsinline muted poster="Poster1.png">
+    <div id="splash-screen" onclick="startApp()">
+        <video id="vid" playsinline webkit-playsinline muted poster="Poster1.png">
             <source src="Poster2.mp4" type="video/mp4">
         </video>
         
-        <div id="splash-overlay">
-            <div class="tap-hint" id="hint-text">Тапни для входа</div>
-            <div id="loading-bar-container">
-                <div id="loading-bar"></div>
-            </div>
+        <div id="overlay">
+            <div class="hint" id="status">PLAY</div>
+            
+            <div id="bar-box"><div id="bar"></div></div>
         </div>
     </div>
 
     <div id="reg-screen">
-        <h2>Регистрация</h2>
-        
-        <div class="form-group">
-            <label>НИКНЕЙМ В WARSPEAR</label>
-            <input type="text" id="game-nick" placeholder="Напр: ShamanKhabar">
-        </div>
-
-        <div class="form-group">
-            <label>ТЕЛЕФОН ДЛЯ СВЯЗИ</label>
-            <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
-        </div>
-
-        <button class="btn-gold" onclick="finishReg()">Войти в Трактир</button>
+        <h2 style="color:#d4af37; letter-spacing: 3px; text-transform: uppercase;">РЕГИСТРАЦИЯ</h2>
+        <input type="text" id="nick" placeholder="Твой ник в Warspear Online">
+        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
+        <button class="btn" onclick="sendReg()">Войти в Трактир</button>
     </div>
 
     <script>
@@ -166,56 +140,60 @@
         tg.headerColor = "#000000";
 
         let isStarted = false;
-        function startLoading() {
+        function startApp() {
             if (isStarted) return;
-            const video = document.getElementById('logo-video');
+            const v = document.getElementById('vid');
+            const box = document.getElementById('bar-box');
+            const bar = document.getElementById('bar');
+            const hint = document.getElementById('status');
             
-            // Активируем звук и полноэкранное видео
-            video.muted = false;
-            video.play().then(() => {
-                isStarted = true;
-                document.getElementById('hint-text').innerText = "Загрузка...";
-                document.getElementById('loading-bar-container').style.display = 'block';
+            v.muted = false;
+            v.play().then(() => {
+                hint.innerText = "ЗАГРУЗКА...";
+                // Слегка меняем стиль текста загрузки
+                hint.style.fontSize = "14px";
+                hint.style.padding = "10px 20px";
                 
-                let width = 0;
-                let interval = setInterval(() => {
-                    width += 1.43; // Расчет на ~7 секунд видео
-                    if (width >= 100) {
+                box.style.display = 'block';
+                isStarted = true;
+                
+                let w = 0;
+                let timer = setInterval(() => {
+                    w += 1.43; // Расчет на ~7 секунд
+                    if (w >= 100) {
                         width = 100;
-                        clearInterval(interval);
-                        showApp();
+                        clearInterval(timer);
+                        
+                        // Плавное исчезновение splash
+                        document.getElementById('splash-screen').style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            // Остановка видео для оптимизации (перенесли в самый конец)
+                            v.pause(); v.src = ""; v.load();
+                            
+                            document.getElementById('splash-screen').style.display = 'none';
+                            document.getElementById('reg-screen').style.display = 'block';
+                            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                        }, 600);
                     }
-                    document.getElementById('loading-bar').style.width = width + '%';
-                }, 100);
-            }).catch(err => {
-                // Если звук блокирован, запускаем без него
-                video.muted = true;
-                video.play();
+                    bar.style.width = width + '%';
+                }, 100); 
+            }).catch(e => {
+                console.log("Audio play blocked, playing muted");
+                v.muted = true;
+                v.play();
                 isStarted = true;
             });
         }
 
-        function showApp() {
-            const splash = document.getElementById('splash-screen');
-            splash.style.opacity = '0';
-            splash.style.transform = 'scale(1.1)';
-            setTimeout(() => {
-                splash.style.display = 'none';
-                document.getElementById('reg-screen').style.display = 'block';
-                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            }, 800);
-        }
-
-        function finishReg() {
-            let nick = document.getElementById('game-nick').value;
-            if (!nick) {
-                tg.showAlert("Странник, назови свой ник!");
-                return;
-            }
+        function sendReg() {
+            let n = document.getElementById('nick').value;
+            if(!n) return tg.showAlert("Введи ник в Warspear!");
             tg.sendData(JSON.stringify({
-                type: "reg",
-                nickname: nick,
-                phone: document.getElementById('phone').value
+                type: "reg", 
+                nick: n, 
+                phone: document.getElementById('phone').value,
+                user: tg.initDataUnsafe.user?.username || "unknown"
             }));
         }
     </script>
